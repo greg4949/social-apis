@@ -40,7 +40,7 @@ module.exports = {
       return res.status(500).json(err);
     }
   },
-  // create a new student
+  // create a new user
   async createUser(req, res) {
     try {
       const user = await User.create(req.body);
@@ -53,7 +53,7 @@ module.exports = {
     // Update a user by its ID
     async updateUser(req, res) {
         try {
-          const user = await User.findOneAndUpdate({ _id: req.params.studentId },{username: newUsername, email: newEmail},{new: true});
+          const user = await User.findOneAndUpdate({ _id: req.params.userId },{username: newUsername, email: newEmail},{new: true});
     
           if (!user) {
             return res.status(404).json({ message: 'No such user exists' });

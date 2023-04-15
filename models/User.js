@@ -17,8 +17,14 @@ const userSchema = new Schema(
       match: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/i,
     },
 
-    thoughts: [thoughtSchema],
-    friends:[userSchema],
+    thoughts: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Thought'
+    }],
+    friends: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    }]
   },
   {
     toJSON: {

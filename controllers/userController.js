@@ -3,23 +3,18 @@ const { User, Thought } = require('../models');
 
 
 module.exports = {
-  // Get all students
+  // Get all users
   async getUsers(req, res) {
     try {
-      const users = await User.find();
-
-      const userObj = {
-        users,
-        
-      };
-
-      res.json(studentObj);
+      const users = await User.find()
+      .select('-__v');
+      res.json(users);
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
     }
   },
-  // Get a single student
+  // Get a single user
   async getSingleUser(req, res) {
     try {
       const user = await User.findOne({ _id: req.params.userId })
@@ -53,6 +48,8 @@ module.exports = {
     // Update a user by its ID
     async updateUser(req, res) {
         try {
+          const newUsername =req.body.username;
+          const newEmail = req.body.email;
           const user = await User.findOneAndUpdate({ _id: req.params.userId },{username: newUsername, email: newEmail},{new: true});
     
           if (!user) {
@@ -60,7 +57,7 @@ module.exports = {
           } 
 
     
-          res.json({ message: 'Student successfully updated' });
+          res.json({ message: 'User successfully updated' });
         } catch (err) {
           console.log(err);
           res.status(500).json(err);
@@ -69,7 +66,7 @@ module.exports = {
   // Delete a user and remove their thoughts
   async deleteUser(req, res) {
     try {
-      const student = await User.findOneAndRemove({ _id: req.params.userId });
+      const user = await User.findOneAndRemove({ _id: req.params.userId });
 
       if (!user) {
         return res.status(404).json({ message: 'No such user exists' });
@@ -93,4 +90,64 @@ module.exports = {
       res.status(500).json(err);
     }
   },
-};
+//add friend
+
+async addFriend (req,res) {
+    try {
+        const { userId, friendId } = req.params;
+    
+        // find the user by id
+        const user = await User.findById(userId);
+    
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+    
+        // add the friend to the user's friends array field
+        user.friends.push(friendId);
+        await user.save();
+    
+        res.json({message: 'Friend successfully added'});    
+        
+    } catch (err) {
+        console.log(err);
+        res.status(500).json(err);
+      }
+
+
+},
+
+//delete friend
+
+async deleteFriend (req,res) {
+    try {
+        const { userId, friendId } = req.params;
+    
+        // find the user by id
+        const user = await User.findById(userId);
+    
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+    
+        // find the index of the friend in the user's friends array field
+        const friendIndex = user.friends.indexOf(friendId);
+    
+        if (friendIndex === -1) {
+          return res.status(404).json({ error: 'Friend not found' });
+        }
+    
+        // remove the friend from the user's friends array field
+        user.friends.splice(friendIndex, 1);
+        await user.save();
+    
+        res.json({message: 'Friend successfully deleted'});
+      }catch (err) {
+        console.log(err);
+        res.status(500).json(err);
+      }
+
+}
+
+}
+

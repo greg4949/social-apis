@@ -18,10 +18,12 @@ const thoughtSchema = new Schema(
           return new Date(timestamp).toLocaleDateString();
         }
       },
-      username: {
-        type: String,
-        required: true,       
-      },
+      users: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'User',
+        },
+      ],
       reaction: [reactionSchema],
     },
     {
@@ -36,7 +38,7 @@ const thoughtSchema = new Schema(
 thoughtSchema
 .virtual('reactionCount')
 .get(function () {
-  return this.reactions.length;
+  return this.reaction.length;
 })
   
   const Thought = model('thought', thoughtSchema);

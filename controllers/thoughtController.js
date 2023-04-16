@@ -1,4 +1,4 @@
-const { Thought, Reaction } = require('../models');
+const { Thought, Reaction, User } = require('../models');
 
 module.exports = {
   // Get all thoughts
@@ -29,6 +29,16 @@ module.exports = {
   async createThought(req, res) {
     try {
       const thought = await Thought.create(req.body);
+      const userId = req.body.userId
+            // find the user by id
+            const user = await User.findById(userId);
+    
+            if (!user) {
+              return res.status(404).json({ error: 'User not found' });
+            }
+        // add the thought to the user's thoughts array field
+        user.thoughts.push(thought._id);
+        await user.save();            
       res.json(thought);
     } catch (err) {
       console.log(err);
@@ -44,8 +54,7 @@ module.exports = {
         return res.status(404).json({ message: 'No thought with that ID' });
       }
 
-      await Reaction.deleteMany({ _id: { $in: thought.reaction } });
-      res.json({ message: 'thought and reactions deleted!' });
+    res.json({ message: 'Thought deleted!' });
     } catch (err) {
       res.status(500).json(err);
     }
@@ -53,14 +62,29 @@ module.exports = {
   // Update a thought
   async updateThought(req, res) {
     try {
-      const thought = await thought.findOneAndUpdate(
-        { _id: req.params.thoughtId },
-        { $set: req.body },
-        { runValidators: true, new: true }
-      );
+      const thought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId },{thoughtText: req.body.thoughtText},{new: true});
 
       if (!thought) {
-        return res.status(404).json({ message: 'No thought with this id!' });
+        return res.status(404).json({ message: 'No such thought exists' });
+      } 
+
+
+      res.json({ message: 'thought successfully updated' });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(err);
+    }
+  },
+
+
+//create reaction
+  async createReaction (req, res) {
+    try {
+      const thought = await Thought.findOneAndUpdate({ _id: req.params.thoughtId },{$addToSet: {reaction: req.body}}, { runValidators: true, new: true })
+       
+
+      if (!thought) {
+        return res.status(404).json({ message: 'No thought with that ID' });
       }
 
       res.json(thought);
@@ -70,55 +94,22 @@ module.exports = {
   },
 
 
-//create reaction
-  async createReaction (req, res) {
-    try {
-        const { thoughtId } = req.params;
-        const { reactionBody } = req.body;
-    
-        // find the thought by id
-        const thought = await Thought.findById(thoughtId);
-    
-        if (!thought) {
-          return res.status(404).json({ error: 'Thought not found' });
-        }
-    
-        // add the reaction to the thought's reactions array field
-        thought.reactions.push({ reactionBody });
-        await thought.save();
-    
-        res.json(thought);
-    } catch (err) {
-      console.log(err);
-      return res.status(500).json(err);
-    }
-  },
-
-
   //Delete Reaction
-  async deleteThought(req, res) {
+  async deleteReaction(req, res) {
     try {
-        const { thoughtId, reactionId } = req.params;
-    
-        // find the thought by id
-        const thought = await Thought.findById(thoughtId);
-    
-        if (!thought) {
-          return res.status(404).json({ error: 'Thought not found' });
-        }
-    
-        // find the index of the reaction in the thought's reactions array field
-        const reactionIndex = thought.reactions.findIndex(reaction => reaction.id === reactionId);
-    
-        if (reactionIndex === -1) {
-          return res.status(404).json({ error: 'Reaction not found' });
-        }
-    
-        // remove the reaction from the thought's reactions array field
-        thought.reactions.splice(reactionIndex, 1);
-        await thought.save();
-    
-        res.json(thought);
+      const thought = await Thought.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $pull: { reaction: { reactionId: req.params.reactionId } } },
+        { runValidators: true, new: true }
+      );
+
+      if (!thought) {
+        return res
+          .status(404)
+          .json({ message: 'No student found with that ID :(' });
+      }
+
+      res.json(thought);
     } catch (err) {
       res.status(500).json(err);
     }

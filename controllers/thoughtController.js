@@ -106,7 +106,7 @@ module.exports = {
       if (!thought) {
         return res
           .status(404)
-          .json({ message: 'No student found with that ID :(' });
+          .json({ message: 'No reaction found with that ID :(' });
       }
 
       res.json(thought);
